@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty List</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        .card {
+            border: 2px solid black;
+            width: 19%;
+            height: 53vh;
+            border-radius: 15px;
+            overflow: hidden;
+            display: inline-block;
+            margin: 2vw;
+        }
+
+        .card-img {
+            width: 100%;
+            height: 25vh;
+            border-bottom: 2px solid black;
+        }
+
+        .c {
+            width: 100%;
+            height: 100%;
+        }
+
+        .name {
+            text-transform: capitalize;
+            font-size: 25px;
+            text-align: center;
+            text-decoration: underline;
+            margin-top: 0vw;
+        }
+
+        .e {
+            padding: 0 .5vw;
+            margin: -1.5vw 0;
+        }
+
+        label {
+            font-weight: 900;
+        }
+
+        .icon {
+            color: black;
+            font-size: 30px;
+            margin-top: 2.5vw;
+            display: flex;
+            align-items: center;
+            justify-content: space-evenly;
+        }
+
+        button {
+            border-radius: 30%;
+            text-align: center;
+            width: 5vw;
+            background-color: grey;
+            box-shadow: 2px 4px black;
+            height: 2.5vw;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        #search {
+            width: 50%;
+            height: 5vb;
+            border-radius: 1.5vb;
+            margin-left: 24%;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Faculty List</h1>
+    <input type="text" class="form-control" id="search" name="search" placeholder="Search..." style="width: 50%; margin-left: 24%; margin-bottom: 20px;">
+    <div class="c">
+        <ul id="facultyList">
+            <% facultyList.forEach(function(faculty) { %>
+                <div class="card">
+                    <div class="card-body">
+                        <img class="card-img" src="/<%= faculty.img %>" alt="image not found">
+                        <h1 class="card-title name"><%= faculty.name %></h1><br>
+                        <div class="e">
+                            <label for="">Email:</label>&nbsp;<span class="card-title age"><%= faculty.email %></span><br>
+                            <label for="">Experience:</label>&nbsp;<span class="card-title ex"><%= faculty.experience %></span><br>
+                            <label for="">Address:</label>&nbsp;<span class="card-title address"><%= faculty.address %></span>
+                        </div>
+                        <div class="icon">
+                            <button><a href="/facupdate/<%= faculty._id %>"><i class="ri-edit-fill"></i></a></button>
+                            <button><a href="/delete/<%= faculty._id %>"><i class="ri-delete-bin-5-fill"></i></a></button>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+        </ul>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('search');
+        const facultyListContainer = document.getElementById('facultyList');
+
+        searchInput.addEventListener('input', async () => {
+            const searchKey = searchInput.value.trim();
+
+            try {
+                const response = await fetch(`/searchFaculty/${searchKey}`);
+                const facultyList = await response.json();
+
+                // Render the faculty list based on search results
+                renderFacultyList(facultyList);
+            } catch (error) {
+                console.error('Error fetching search results:', error);
+            }
+        });
+
+        function renderFacultyList(facultyList) {
+            facultyListContainer.innerHTML = ''; // Clear previous results
+            if (facultyList.length === 0) {
+                facultyListContainer.innerHTML = '<p>No matching faculty found</p>';
+                return;
+            }
+
+            facultyList.forEach(faculty => {
+                const card = `
+                    <div class="card">
+                        <div class="card-body">
+                            <img class="card-img" src="/${faculty.img}" alt="image not found">
+                            <h1 class="card-title name">${faculty.name}</h1><br>
+                            <div class="e">
+                                <label>Email:</label>&nbsp;<span class="card-title age">${faculty.email}</span><br>
+                                <label>Experience:</label>&nbsp;<span class="card-title ex">${faculty.experience}</span><br>
+                                <label>Address:</label>&nbsp;<span class="card-title address">${faculty.address}</span>
+                            </div>
+                            <div class="icon">
+                                <button><a href="/facupdate/${faculty._id}"><i class="ri-edit-fill"></i></a></button>
+                                <button><a href="/delete/${faculty._id}"><i class="ri-delete-bin-5-fill"></i></a></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                facultyListContainer.insertAdjacentHTML('beforeend', card);
+            });
+        }
+    </script>
+</body>
+</html>
