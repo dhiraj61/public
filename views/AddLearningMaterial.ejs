@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload PDF</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Additional custom styles */
+        body {
+            padding: 50px;
+        }
+        #uploadForm {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Upload PDF</h1>
+        <form id="uploadForm"  action="/uploadLearn"  method="post" enctype="multipart/form-data">
+            <div class="custom-file mb-3">
+                <input type="file" class="custom-file-input" id="pdfFile" name="pdfFile" accept=".pdf" required>
+                <label class="custom-file-label" for="pdfFile">Choose PDF file</label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Upload</button>
+        </form>
+    </div>
+
+    <!-- Bootstrap JS (optional) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- <script>
+        // Update file input label with selected file name
+        $('#pdfFile').on('change', function() {
+            var fileName = $(this).val().split('\\').pop();
+            $(this).next('.custom-file-label').html(fileName);
+        });
+
+        // Handle form submission
+        $('#uploadForm').submit(function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            var formData = new FormData(this); // Create FormData object
+
+            // Send AJAX request to upload file
+            $.ajax({
+                url: '/upload',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    alert('File uploaded successfully');
+                    $('#pdfFile').val(''); // Reset file input
+                    $('.custom-file-label').html('Choose PDF file');
+                },
+                error: function(xhr, status, error) {
+                    alert('Error uploading file');
+                    console.error('Error:', error);
+                }
+            });
+        });
+    </script> -->
+</body>
+</html>

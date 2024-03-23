@@ -9,6 +9,7 @@ require("./Config");
 const Faculty = require("./Faculty");
 const Student = require("./Student");
 const Attendance = require("./Attendance");
+const Learn = require("./Learn");
 
 app.set("view engine", "ejs");
 app.set("views", path.resolve(__dirname, "views"));
@@ -112,6 +113,13 @@ app.get("/faculty", async (req, res) => {
   res.render("FacDisp", { facultyList: facultyList });
 });
 
+app.get("/Learn", (req, res) => {
+  res.render("AddLearningMaterial");
+});
+
+app.get("/CheckLearn", (req, res) => {
+  res.render("CheckLearn");
+});
 app.get("/student", async (req, res) => {
   const facultyList = await Student.find();
   res.render("StudDisp", { facultyList: facultyList });
@@ -271,7 +279,6 @@ app.get("/studupdt/:id", async (req, resp) => {
   }
 });
 
-// POST endpoint to handle attendance submission
 app.post("/markAttendance", async (req, res) => {
   try {
     const attendanceRecords = req.body; // Array of attendance records
@@ -280,7 +287,12 @@ app.post("/markAttendance", async (req, res) => {
     const validAttendanceRecords = await Promise.all(
       attendanceRecords.map(async (record) => {
         // Check if each record has required fields
-        if (record.studentId && record.studentName && record.status) {
+        if (
+          record.studentId &&
+          record.studentName &&
+          record.status &&
+          record.date
+        ) {
           return record;
         } else {
           throw new Error("Invalid attendance record format");
@@ -306,27 +318,39 @@ app.post("/markAttendance", async (req, res) => {
 
 // API endpoint to get attendance report for a student
 // API endpoint to get attendance report for a student by name
-app.get("/attendance/reportByName/:studentName", async (req, res) => {
+app.get("/attendance/:name", async (req, res) => {
+  const name = req.params.name;
+
   try {
-    const studentName = req.params.studentName;
+    // Query MongoDB for attendance data for the specified name
+    const attendanceData = await Attendance.find({ studentName: name });
 
-    // Find student by name
-    const student = await Attendance.findOne({ studentName: studentName });
-    if (!student) {
-      return res.status(404).json({ message: "Student not found" });
-    }
+    // Process and display the fetched data
+    if (attendanceData.length > 0) {
+      // Create a dictionary to store attendance data date-wise
+      const attendanceByDate = {};
 
-    // Find attendance records for the specified student
-    const attendanceReport = await Attendance.find({ student: student._id });
+      // Organize attendance data date-wise
+      attendanceData.forEach((entry) => {
+        const date = entry.date.toDateString(); // Assuming date is stored as Date object
+        const status = entry.status;
+        if (!attendanceByDate[date]) {
+          attendanceByDate[date] = [];
+        }
+        attendanceByDate[date].push(status);
+      });
 
-    if (attendanceReport) {
-      res.status(200).json({ student: student, attendance: attendanceReport });
+      // Send the data back as JSON response
+      res.json({ success: true, data: attendanceByDate });
     } else {
-      res.status(404).json({ message: "Attendance report not found" });
+      res.status(404).json({
+        success: false,
+        message: `No attendance data found for ${name}`,
+      });
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
 
@@ -344,6 +368,24 @@ app.get("/getStudentId", async (req, res) => {
     console.error("Error fetching student ID:", error);
     res.status(500).json({ error: "Internal server error" });
   }
+});
+
+app.post("/uploadLearn", upload.single("pdfFile"), async (req, res) => {
+  const pdfFile = req.file ? req.file.filename : null;
+  const learn = new Learn({
+    pdfFile,
+  });
+  const result = await learn.save();
+  if (result) {
+    res.send(
+      '<script>alert("Uploaded"); window.location.assign("/CheckLearn") </script>'
+    );
+  }
+});
+
+app.get("/CheckLearn", async (req, res) => {
+  const learnList = await Learn.find();
+  res.render("CheckLearn", { learnList: learnList });
 });
 
 app.listen(PORT, () => console.log(`Server Started at PORT:${PORT}`));

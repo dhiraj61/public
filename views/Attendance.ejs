@@ -31,6 +31,19 @@
             background-color: red;
             color: white;
         }
+        .date{
+            width:260px;
+           display: flex;
+           align-items: center  ;
+           justify-content: space-between;
+           
+            margin-left: 25vw;
+            position: relative;
+            top:-3vw;
+        }
+        input{
+            font-size: 20px;
+        }
     </style>
 </head>
 <body>
@@ -38,6 +51,12 @@
     <form id="attendanceForm">
         <table>
             <thead>
+                <div class="date">
+                    <form action="">
+                        <label for="datepicker" >Select Date : </label>
+                        <input type="date" name="date" id="date">
+                    </form>
+                </div>
                 <tr>
                     <th>Serial No.</th>
                     <th>Name</th>
@@ -65,33 +84,69 @@
     </form>
 </body>
 <script>
-    async function submitAttendance() {
-        const attendanceRecords = [];
-        // Iterate over all checkboxes
-        document.querySelectorAll('input[type="checkbox"]:checked').forEach((checkbox) => {
-            const [prefix, studentId] = checkbox.name.split('_');
-            const studentName = document.querySelector(`input[name="studentName_${studentId}"]`).value;
-            const status = checkbox.value;
-            attendanceRecords.push({ studentId, studentName, status });
-        });
+    // async function submitAttendance() {
+    //     const attendanceRecords = [];
+    //     // Iterate over all checkboxes
+    //     document.querySelectorAll('input[type="checkbox"]:checked').forEach((checkbox) => {
+    //         const [prefix, studentId] = checkbox.name.split('_');
+    //         const studentName = document.querySelector(`input[name="studentName_${studentId}"]`).value;
+    //         const status = checkbox.value;
+    //         attendanceRecords.push({ studentId, studentName, status });
+    //     });
 
-        try {
-            const response = await fetch('/markAttendance', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(attendanceRecords)
-            });
-            if (response.ok) {
-                alert('Attendance marked successfully!');
-            } else {
-                throw new Error('Failed to mark attendance.');
-            }
-        } catch (error) {
-            console.error('Error marking attendance:', error);
-            alert('An error occurred while marking attendance.');
+    //     try {
+    //         const response = await fetch('/markAttendance', {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json'
+    //             },
+    //             body: JSON.stringify(attendanceRecords)
+    //         });
+    //         if (response.ok) {
+    //             alert('Attendance marked successfully!');
+    //             location.assign('/attendance')
+    //         } else {
+    //             throw new Error('Failed to mark attendance.');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error marking attendance:', error);
+    //         alert('An error occurred while marking attendance.');
+    //     }
+    // }
+
+    // Modify the submitAttendance function to include the selected date in each attendance record
+async function submitAttendance() {
+    const attendanceRecords = [];
+    const date = document.getElementById('date').value;
+
+    // Iterate over all checkboxes
+    document.querySelectorAll('input[type="checkbox"]:checked').forEach((checkbox) => {
+        const [prefix, studentId] = checkbox.name.split('_');
+        const studentName = document.querySelector(`input[name="studentName_${studentId}"]`).value;
+        const status = checkbox.value;
+        attendanceRecords.push({ studentId, studentName, status, date });
+    });
+
+    // Send attendance records to the backend
+    try {
+        const response = await fetch('/markAttendance', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(attendanceRecords)
+        });
+        if (response.ok) {
+            alert('Attendance marked successfully!');
+            location.assign('/attendance');
+        } else {
+            throw new Error('Failed to mark attendance.');
         }
+    } catch (error) {
+        console.error('Error marking attendance:', error);
+        alert('An error occurred while marking attendance.');
     }
+}
+
 </script>
 </html>
