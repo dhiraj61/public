@@ -8,6 +8,7 @@ const User = require("./User");
 require("./Config");
 const Faculty = require("./Faculty");
 const Student = require("./Student");
+const Attendance = require("./Attendance");
 
 app.set("view engine", "ejs");
 app.set("views", path.resolve(__dirname, "views"));
@@ -90,12 +91,20 @@ app.get("/sidebar", (req, res) => {
   res.render("Sidebar");
 });
 
+// app.get("/attendance", (req, res) => {
+//   res.render("Attendance");
+// });
+
 app.get("/HomePage.ejs", (req, res) => {
   res.render("HomePage");
 });
 
 app.get("/AddStudent.ejs", (req, res) => {
   res.render("AddStudent");
+});
+
+app.get("/attendanceReport", (req, res) => {
+  res.render("AttendanceReport");
 });
 
 app.get("/faculty", async (req, res) => {
@@ -238,6 +247,103 @@ app.get("/searchFaculty/:key", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-// Server-side route for updating a faculty member
+
+app.get("/attendance", async (req, res) => {
+  try {
+    // Fetch list of students from the database
+    const students = await Student.find();
+    // Render the EJS template with the list of students
+    // res.send(students);
+    res.render("Attendance", { students: students });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.get("/studupdt/:id", async (req, resp) => {
+  let result = await Student.findOne({ _id: req.params.id });
+  if (result) {
+    const facultyList = await Student.find({ _id: req.params.id });
+    resp.render("UpdateStudent", { facultyList: facultyList });
+  } else {
+    resp.send({ result: "No Record Found." });
+  }
+});
+
+// POST endpoint to handle attendance submission
+app.post("/markAttendance", async (req, res) => {
+  try {
+    const attendanceRecords = req.body; // Array of attendance records
+
+    // Validate attendance records
+    const validAttendanceRecords = await Promise.all(
+      attendanceRecords.map(async (record) => {
+        // Check if each record has required fields
+        if (record.studentId && record.studentName && record.status) {
+          return record;
+        } else {
+          throw new Error("Invalid attendance record format");
+        }
+      })
+    );
+
+    // Save valid attendance records to the database
+    const insertedAttendance = await Attendance.insertMany(
+      validAttendanceRecords
+    );
+
+    if (insertedAttendance) {
+      res.status(201).json({ message: "Attendance marked successfully" });
+    } else {
+      throw new Error("Failed to mark attendance");
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// API endpoint to get attendance report for a student
+// API endpoint to get attendance report for a student by name
+app.get("/attendance/reportByName/:studentName", async (req, res) => {
+  try {
+    const studentName = req.params.studentName;
+
+    // Find student by name
+    const student = await Attendance.findOne({ studentName: studentName });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    // Find attendance records for the specified student
+    const attendanceReport = await Attendance.find({ student: student._id });
+
+    if (attendanceReport) {
+      res.status(200).json({ student: student, attendance: attendanceReport });
+    } else {
+      res.status(404).json({ message: "Attendance report not found" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.get("/getStudentId", async (req, res) => {
+  try {
+    // Fetch student ID from the database
+    const students = await Student.find().select("_id"); // Fetch only the student IDs
+    if (students.length > 0) {
+      const studentId = students[0]._id; // For demonstration, we fetch the first student ID
+      res.json({ studentId });
+    } else {
+      throw new Error("No students found in the database");
+    }
+  } catch (error) {
+    console.error("Error fetching student ID:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 app.listen(PORT, () => console.log(`Server Started at PORT:${PORT}`));

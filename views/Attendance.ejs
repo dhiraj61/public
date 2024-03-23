@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 80%;
+            margin: 20px auto;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .present, .absent {
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .present {
+            background-color: green;
+            color: white;
+        }
+        .absent {
+            background-color: red;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Student Attendance</h1>
+    <form id="attendanceForm">
+        <table>
+            <thead>
+                <tr>
+                    <th>Serial No.</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Attendance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% students.forEach(function(student, index) { %>
+                    <tr>
+                        <td><%= index + 1 %></td>
+                        <td><%= student.name %></td>
+                        <td><%= student.email %></td>
+                        <td>
+                            <input type="hidden" name="studentId_<%= student._id %>" value="<%= student._id %>">
+                            <input type="hidden" name="studentName_<%= student._id %>" value="<%= student.name %>">
+                            <label><input type="checkbox" name="attendance_<%= student._id %>" value="present"> Present</label>
+                            <label><input type="checkbox" name="attendance_<%= student._id %>" value="absent"> Absent</label>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+        <button type="button" onclick="submitAttendance()">Submit Attendance</button>
+    </form>
+</body>
+<script>
+    async function submitAttendance() {
+        const attendanceRecords = [];
+        // Iterate over all checkboxes
+        document.querySelectorAll('input[type="checkbox"]:checked').forEach((checkbox) => {
+            const [prefix, studentId] = checkbox.name.split('_');
+            const studentName = document.querySelector(`input[name="studentName_${studentId}"]`).value;
+            const status = checkbox.value;
+            attendanceRecords.push({ studentId, studentName, status });
+        });
+
+        try {
+            const response = await fetch('/markAttendance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(attendanceRecords)
+            });
+            if (response.ok) {
+                alert('Attendance marked successfully!');
+            } else {
+                throw new Error('Failed to mark attendance.');
+            }
+        } catch (error) {
+            console.error('Error marking attendance:', error);
+            alert('An error occurred while marking attendance.');
+        }
+    }
+</script>
+</html>

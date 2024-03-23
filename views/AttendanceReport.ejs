@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Report</title>
+</head>
+<body>
+    <h1>Attendance Report</h1>
+    <label for="studentName">Enter Student Name:</label>
+    <input type="text" id="studentName" name="studentName">
+    <button onclick="fetchAttendanceReport()">Fetch Report</button>
+    <div id="attendanceReport"></div>
+
+    <script>
+        async function fetchAttendanceReport() {
+            const studentName = document.getElementById('studentName').value;
+            
+            try {
+                const response = await fetch(`/attendance/reportByName/${encodeURIComponent(studentName)}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    const { student, attendance } = data;
+
+                    if (attendance.length > 0) {
+                        const reportHTML = `
+                            <h2>Student Name: ${student.name}</h2>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${attendance.map(record => `
+                                        <tr>
+                                            <td>${new Date(record.date).toLocaleDateString()}</td>
+                                            <td>${record.status}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        `;
+                        document.getElementById('attendanceReport').innerHTML = reportHTML;
+                    } else {
+                        document.getElementById('attendanceReport').innerHTML = '<p>No attendance records found for this student.</p>';
+                    }
+                } else {
+                    throw new Error(data.message || 'Failed to fetch attendance report');
+                }
+            } catch (error) {
+                console.error('Error fetching attendance report:', error);
+                document.getElementById('attendanceReport').innerHTML = `<p>${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
